@@ -11,6 +11,7 @@ import {
   RemovalPolicy,
   Arn,
   ArnFormat,
+  Tags,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { constants } from './constants';
@@ -25,6 +26,8 @@ interface MinecraftStackProps extends StackProps {
 export class MinecraftStack extends Stack {
   constructor(scope: Construct, id: string, props: MinecraftStackProps) {
     super(scope, id, props);
+
+    Tags.of(this).add('stack-tag', 'minecraft-stack');
 
     const { config } = props;
 

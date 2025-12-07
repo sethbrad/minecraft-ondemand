@@ -7,6 +7,7 @@ import { constants } from '../lib/constants';
 import { resolveConfig } from '../lib/config';
 
 const app = new cdk.App();
+cdk.Tags.of(app).add('project', 'minecraft-server');
 
 const config = resolveConfig();
 

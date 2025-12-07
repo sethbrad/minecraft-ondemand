@@ -26,6 +26,13 @@ export const getMinecraftServerConfig = (
     ingressRulePort: Port.tcp(25565),
   };
 
+  const customConfig = {
+    image: constants.MY_MODDED_DOCKER_IMAGE,
+    port: 25565,
+    protocol: Protocol.TCP,
+    ingressRulePort: Port.tcp(25565),
+  };
+
   const bedrockConfig = {
     image: constants.BEDROCK_EDITION_DOCKER_IMAGE,
     port: 19132,
@@ -33,5 +40,12 @@ export const getMinecraftServerConfig = (
     ingressRulePort: Port.udp(19132),
   };
 
-  return edition === 'java' ? javaConfig : bedrockConfig;
+  switch (edition) {
+    case 'java':
+      return javaConfig;
+    case 'bedrock':
+      return bedrockConfig; 
+    case 'custom':
+      return customConfig;
+  }
 };

@@ -12,6 +12,7 @@ import {
   RemovalPolicy,
   Arn,
   ArnFormat,
+  Tags,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { constants } from './constants';
@@ -26,6 +27,8 @@ interface DomainStackProps extends StackProps {
 export class DomainStack extends Stack {
   constructor(scope: Construct, id: string, props: DomainStackProps) {
     super(scope, id, props);
+
+    Tags.of(this).add('stack-tag', 'domain-stack');
 
     const { config } = props;
 
@@ -112,7 +115,7 @@ export class DomainStack extends Stack {
     const launcherLambda = new lambda.Function(this, 'LauncherLambda', {
       code: lambda.Code.fromAsset(path.resolve(__dirname, '../../lambda')),
       handler: 'lambda_function.lambda_handler',
-      runtime: lambda.Runtime.PYTHON_3_8,
+      runtime: lambda.Runtime.PYTHON_3_10,
       environment: {
         REGION: config.serverRegion,
         CLUSTER: constants.CLUSTER_NAME,
