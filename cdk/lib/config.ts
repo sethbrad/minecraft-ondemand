@@ -2,15 +2,16 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { MinecraftImageEnv, StackConfig } from './types';
 import { stringAsBoolean } from './util';
+import * as imageEnvJson from '../../image-env.json';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const resolveMinecraftEnvVars = (json = ''): MinecraftImageEnv => {
+const resolveMinecraftEnvVars = (): MinecraftImageEnv => {
   const defaults = { EULA: 'TRUE' };
   try {
     return {
       ...defaults,
-      ...JSON.parse(json),
+      ...imageEnvJson,
     };
   } catch (e) {
     console.error(
@@ -33,9 +34,7 @@ export const resolveConfig = (): StackConfig => ({
   taskCpu: +(process.env.TASK_CPU || 1024),
   taskMemory: +(process.env.TASK_MEMORY || 2048),
   vpcId: process.env.VPC_ID || '',
-  minecraftImageEnv: resolveMinecraftEnvVars(
-    process.env.MINECRAFT_IMAGE_ENV_VARS_JSON
-  ),
+  minecraftImageEnv: resolveMinecraftEnvVars(),
   snsEmailAddress: process.env.SNS_EMAIL_ADDRESS || '',
   twilio: {
     phoneFrom: process.env.TWILIO_PHONE_FROM || '',

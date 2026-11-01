@@ -4,6 +4,9 @@ import {
   StackProps,
   aws_lambda as lambda,
   aws_route53 as route53,
+  aws_route53_targets as route53Targets,
+  aws_s3 as s3,
+  aws_s3_deployment as s3Deployment,
   aws_logs as logs,
   aws_ssm as ssm,
   aws_iam as iam,
@@ -71,6 +74,27 @@ export class DomainStack extends Stack {
       domainName: config.domainName,
     });
 
+    const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
+      bucketName: config.domainName,
+      websiteIndexDocument: 'index.html',
+      publicReadAccess: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS_ONLY,
+    });
+
+    new s3Deployment.BucketDeployment(this, 'WebsiteDeployment', {
+      sources: [
+        s3Deployment.Source.asset(path.resolve(__dirname, '../site')),
+      ],
+      destinationBucket: websiteBucket,
+    });
+
+    new route53.ARecord(this, 'WebsiteARecord', {
+      zone: rootHostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.BucketWebsiteTarget(websiteBucket)
+      ),
+    });
+
     const subdomainHostedZone = new route53.HostedZone(
       this,
       'SubdomainHostedZone',
@@ -115,7 +139,7 @@ export class DomainStack extends Stack {
     const launcherLambda = new lambda.Function(this, 'LauncherLambda', {
       code: lambda.Code.fromAsset(path.resolve(__dirname, '../../lambda')),
       handler: 'lambda_function.lambda_handler',
-      runtime: lambda.Runtime.PYTHON_3_10,
+      runtime: lambda.Runtime.PYTHON_3_14,
       environment: {
         REGION: config.serverRegion,
         CLUSTER: constants.CLUSTER_NAME,

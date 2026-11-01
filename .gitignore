@@ -9,5 +9,10 @@ cdk.out
 
 # User context
 cdk.context.json
+
 # User options
 .env
+image-env.json
+server.properties
+
+todo.md
