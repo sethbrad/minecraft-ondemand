@@ -40,7 +40,7 @@ export class MinecraftStack extends Stack {
 
     const fileSystem = new efs.FileSystem(this, 'FileSystem', {
       vpc,
-      removalPolicy: RemovalPolicy.SNAPSHOT,
+      removalPolicy: RemovalPolicy.RETAIN,
     });
 
     const accessPoint = new efs.AccessPoint(this, 'AccessPoint', {
@@ -87,7 +87,7 @@ export class MinecraftStack extends Stack {
     const cluster = new ecs.Cluster(this, 'Cluster', {
       clusterName: constants.CLUSTER_NAME,
       vpc,
-      containerInsights: true, // TODO: Add config for container insights
+      containerInsightsV2: ecs.ContainerInsights.ENABLED,
       enableFargateCapacityProviders: true,
     });
 

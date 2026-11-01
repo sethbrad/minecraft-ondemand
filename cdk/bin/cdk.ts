@@ -38,4 +38,4 @@ const minecraftStack = new MinecraftStack(app, 'minecraft-server-stack', {
   config,
 });
 
-minecraftStack.addDependency(domainStack);
+minecraftStack.addStackDependency(domainStack);
