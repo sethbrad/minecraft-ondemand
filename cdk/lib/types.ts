@@ -28,7 +28,7 @@ interface TwilioConfig {
 
 export type MinecraftImageEnv = Record<string, string>;
 
-export type MinecraftEdition = 'java' | 'bedrock' | 'custom';
+export type MinecraftEdition = 'java' | 'bedrock';
 
 export interface StackConfig {
   /**
