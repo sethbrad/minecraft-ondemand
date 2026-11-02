@@ -105,9 +105,9 @@ export class DomainStack extends Stack {
     );
 
     /* Resource policy for CloudWatch Logs is needed before the zone can be created */
-    subdomainHostedZone.node.addStackDependency(cloudwatchLogResourcePolicy);
+    subdomainHostedZone.node.addDependency(cloudwatchLogResourcePolicy);
     /* Ensure we hvae an existing hosted zone before creating our delegated zone */
-    subdomainHostedZone.node.addStackDependency(rootHostedZone);
+    subdomainHostedZone.node.addDependency(rootHostedZone);
 
     const nsRecord = new route53.NsRecord(this, 'NSRecord', {
       zone: rootHostedZone,
@@ -134,7 +134,7 @@ export class DomainStack extends Stack {
     });
 
     /* Set dependency on A record to ensure it is removed first on deletion */
-    aRecord.node.addStackDependency(subdomainHostedZone);
+    aRecord.node.addDependency(subdomainHostedZone);
 
     const launcherLogGroup = new logs.LogGroup(this, 'LauncherLambdaLogGroup', {
       retention: logs.RetentionDays.THREE_DAYS,
