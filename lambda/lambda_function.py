@@ -12,11 +12,10 @@ SERVICE = os.environ.get('SERVICE', DEFAULT_SERVICE)
 if REGION is None or CLUSTER is None or SERVICE is None:
     raise ValueError("Missing environment variables")
 
+ecs = boto3.client('ecs', region_name=REGION)
+
 
 def lambda_handler(event, context):
-    """Updates the desired count for a service."""
-
-    ecs = boto3.client('ecs', region_name=REGION)
     response = ecs.describe_services(
         cluster=CLUSTER,
         services=[SERVICE],

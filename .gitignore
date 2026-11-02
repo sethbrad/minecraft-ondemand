@@ -16,3 +16,5 @@ image-env.json
 server.properties
 
 todo.md
+
+**/__pycache__/**

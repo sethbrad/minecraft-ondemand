@@ -11,6 +11,7 @@ import {
   RemovalPolicy,
   Arn,
   ArnFormat,
+  CfnOutput,
   Tags,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -83,6 +84,54 @@ export class MinecraftStack extends Stack {
     });
 
     efsReadWriteDataPolicy.attachToRole(ecsTaskRole);
+
+    const bastionRole = new iam.Role(this, 'EfsBastionRole', {
+      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+      description: 'Allows the EFS bastion to mount the Minecraft access point',
+    });
+    bastionRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName(
+        'AmazonSSMManagedInstanceCore'
+      )
+    );
+    efsReadWriteDataPolicy.attachToRole(bastionRole);
+
+    const bastionSecurityGroup = new ec2.SecurityGroup(
+      this,
+      'EfsBastionSecurityGroup',
+      {
+        vpc,
+        description: 'SSM-only access to the Minecraft EFS bastion',
+      }
+    );
+
+    const bastion = new ec2.Instance(this, 'EfsBastion', {
+      vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+      instanceType: new ec2.InstanceType('t3.micro'),
+      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
+      role: bastionRole,
+      securityGroup: bastionSecurityGroup,
+      associatePublicIpAddress: true,
+      requireImdsv2: true,
+    });
+    bastion.addUserData(
+      'dnf install -y amazon-efs-utils',
+      'mkdir -p /mnt/minecraft',
+      `echo "${fileSystem.fileSystemId}:/ /mnt/minecraft efs _netdev,tls,iam,accesspoint=${accessPoint.accessPointId} 0 0" >> /etc/fstab`,
+      'for attempt in $(seq 1 36); do mount /mnt/minecraft && exit 0; sleep 10; done',
+      'echo "Unable to mount EFS at /mnt/minecraft" >&2',
+      'exit 1'
+    );
+
+    new CfnOutput(this, 'EfsBastionInstanceId', {
+      value: bastion.instanceId,
+      description: 'Use AWS Systems Manager Session Manager to connect',
+    });
+    new CfnOutput(this, 'EfsBastionConnectCommand', {
+      value: `aws ssm start-session --target ${bastion.instanceId} --region ${this.region}`,
+      description: 'Command to open a shell on the EFS bastion',
+    });
 
     const cluster = new ecs.Cluster(this, 'Cluster', {
       clusterName: constants.CLUSTER_NAME,
@@ -190,6 +239,7 @@ export class MinecraftStack extends Stack {
     fileSystem.connections.allowDefaultPortFrom(
       minecraftServerService.connections
     );
+    fileSystem.connections.allowDefaultPortFrom(bastion.connections);
 
     const hostedZoneId = new SSMParameterReader(
       this,
